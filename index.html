@@ -1,57 +1,136 @@
 from pathlib import Path
-import base64, re
+import base64
 
-# Find the latest BFTH HTML file created earlier.
-html_files = sorted(Path("/mnt/data").glob("BFTH_BRICO*.html"), key=lambda p: p.stat().st_mtime, reverse=True)
-if not html_files:
-    raise FileNotFoundError("ملف HTML السابق غير موجود في مساحة الملفات.")
+logo_b64 = base64.b64encode(Path("/mnt/data/28965.jpg").read_bytes()).decode("ascii")
 
-html_path = html_files[0]
-html = html_path.read_text(encoding="utf-8")
+html = r'''<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BFTH BRICO | متجر الخردوات والأدوات</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Tahoma,sans-serif}
+body{background:#f5f6f8;color:#172033}
+header{background:#071a3d;color:#fff;position:sticky;top:0;z-index:1000;box-shadow:0 2px 12px #0003}
+.top{max-width:1200px;margin:auto;padding:10px 16px;display:flex;align-items:center;gap:18px}
+.logo-img{width:105px;height:62px;object-fit:contain;background:#fff;border-radius:10px;padding:3px;flex-shrink:0}
+.search{flex:1;max-width:520px}
+.search input{width:100%;padding:12px 18px;border:0;border-radius:30px;outline:none;font-size:15px}
+.cart{background:#f5a400;color:#071a3d;padding:11px 17px;border-radius:25px;font-weight:bold;cursor:pointer;white-space:nowrap}
+nav{background:#fff;border-bottom:1px solid #ddd}
+.nav-inner{max-width:1200px;margin:auto;display:flex;overflow-x:auto;padding:10px 15px;gap:10px}
+.nav-inner button{border:0;background:#eef1f6;padding:10px 18px;border-radius:20px;cursor:pointer;white-space:nowrap}
+.nav-inner button:hover{background:#f5a400}
+.hero{max-width:1200px;margin:20px auto;padding:55px 30px;border-radius:20px;background:linear-gradient(135deg,#071a3d,#123a79);color:#fff}
+.hero h1{font-size:42px;margin-bottom:15px}.hero h1 span{color:#f5a400}
+.hero p{font-size:18px;margin-bottom:25px;line-height:1.8}
+.hero a{display:inline-block;background:#f5a400;color:#071a3d;padding:13px 25px;border-radius:30px;text-decoration:none;font-weight:bold}
+.features{max-width:1200px;margin:20px auto;display:grid;grid-template-columns:repeat(4,1fr);gap:15px;padding:0 15px}
+.feature{background:#fff;padding:20px;border-radius:15px;text-align:center;box-shadow:0 3px 12px #0000000d}
+.feature .icon{font-size:30px;margin-bottom:8px}.feature h3{font-size:16px;margin-bottom:5px}.feature p{color:#777;font-size:13px}
+.section{max-width:1200px;margin:35px auto;padding:0 15px}.section-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}.section-title h2{font-size:25px}
+.products{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.product{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 3px 15px #00000012;transition:.25s}.product:hover{transform:translateY(-5px)}
+.product-img{height:210px;background:#eef0f3;display:flex;align-items:center;justify-content:center;font-size:70px;position:relative}
+.badge{position:absolute;top:10px;right:10px;background:#e53935;color:#fff;padding:5px 10px;border-radius:15px;font-size:12px}
+.product-info{padding:15px}.product-info h3{font-size:17px;margin-bottom:8px}.product-info p{color:#777;font-size:13px;margin-bottom:12px}
+.price{color:#071a3d;font-size:20px;font-weight:bold;margin-bottom:12px}
+.add{width:100%;border:0;background:#071a3d;color:#fff;padding:11px;border-radius:9px;cursor:pointer;font-weight:bold}.add:hover{background:#f5a400;color:#071a3d}
+.whatsapp{position:fixed;bottom:20px;left:20px;width:58px;height:58px;border-radius:50%;background:#25D366;color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;text-decoration:none;box-shadow:0 4px 15px #0004;z-index:2000}
+footer{background:#071a3d;color:#fff;margin-top:50px;padding:40px 20px 20px}.footer-inner{max-width:1200px;margin:auto;display:grid;grid-template-columns:2fr 1fr 1fr;gap:30px}
+footer h3{color:#f5a400;margin-bottom:15px}footer p{color:#d6dbea;line-height:1.8}footer ul{list-style:none}footer li{margin:10px 0}
+.copyright{text-align:center;border-top:1px solid #ffffff22;margin-top:30px;padding-top:18px;color:#aaa}
+.modal{display:none;position:fixed;inset:0;background:#0008;z-index:3000;align-items:center;justify-content:center;padding:20px}
+.modal-box{background:#fff;width:100%;max-width:500px;border-radius:18px;padding:25px;max-height:90vh;overflow:auto}.modal-header{display:flex;justify-content:space-between;margin-bottom:20px}.close{font-size:25px;cursor:pointer}
+.cart-item{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee;padding:12px 0;gap:10px}.qty{display:flex;align-items:center;gap:8px}.qty button{width:28px;height:28px;border:0;border-radius:5px;cursor:pointer}
+.checkout{width:100%;margin-top:20px;padding:14px;background:#25D366;border:0;color:#fff;font-weight:bold;border-radius:10px;cursor:pointer}
+@media(max-width:900px){.products{grid-template-columns:repeat(3,1fr)}.features{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:650px){.top{flex-wrap:wrap;justify-content:center}.logo-img{width:125px;height:68px}.search{order:3;flex-basis:100%;max-width:none}.hero{margin:12px;padding:40px 22px}.hero h1{font-size:30px}.hero p{font-size:15px}.products{grid-template-columns:repeat(2,1fr);gap:10px}.product-img{height:160px;font-size:55px}.product-info{padding:10px}.product-info h3{font-size:14px}.price{font-size:17px}.footer-inner{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
 
-products = [
-    ("/mnt/data/28562.png", "مصباح مكتبي مرن", 1650, "إضاءة عملية وأنيقة للمكتب والدراسة والعمل المنزلي، بذراع مرن قابل للتوجيه، متوفر بالأخضر والأزرق. السعر 1650 دج للواحدة أو 3000 دج للزوج."),
-    ("/mnt/data/28436.png", "موقد كهربائي 1000 واط", 1850, "موقد كهربائي بقوة 1000 واط، متوفر بنوع حلزوني ونوع قرص، مع مفتاح للتحكم في الحرارة ولمبة مؤشر التشغيل."),
-    ("/mnt/data/28297.png", "طقم مفتاح صنبو ر احترافي 5 قطع", 3500, "طقم مفاتيح صنابير احترافي من فولاذ قوي ومقاوم للصدأ، مناسب لفك وربط الصنابير والوصلات في الأماكن الضيقة."),
-    ("/mnt/data/28293.png", "مفتاح صنبو ر احترافي طويل", 1950, "مفتاح طويل وعملي لفك وربط الحنفيات، بذراع طويل يمنح قوة أكبر أثناء العمل ومناسب للصيانة المنزلية والسباكة."),
-    ("/mnt/data/28211.png", "مفتاح متعدد الاستخدامات", 1100, "أداة عملية متعددة الاستخدامات، مناسبة لأعمال السباكة وصيانة الغاز والسيارات، بقبضة مريحة وتصميم متين."),
-    ("/mnt/data/28209.png", "مصد باب مغناطيسي", 880, "مصد باب مغناطيسي قوي لحماية الأبواب والجدران من الصدمات والخدوش، سهل التركيب ومناسب لمختلف الديكورات."),
-]
+<header>
+<div class="top">
+<img class="logo-img" src="data:image/jpeg;base64,LOGO_BASE64" alt="BFTH BRICO">
+<div class="search"><input type="text" id="searchInput" placeholder="ابحث عن منتج..." onkeyup="searchProducts()"></div>
+<div class="cart" onclick="openCart()">🛒 السلة (<span id="cartCount">0</span>)</div>
+</div>
+</header>
 
-cards = []
-for path, name, price, desc in products:
-    b64 = base64.b64encode(Path(path).read_bytes()).decode("ascii")
-    cards.append(f'''
-<div class="product" data-category="tools" data-name="{name}">
-  <div class="product-img" style="height:210px;background:#fff;">
-    <img src="data:image/png;base64,{b64}" alt="{name}" style="width:100%;height:100%;object-fit:contain;">
-    <div class="badge">متوفر</div>
-  </div>
-  <div class="product-info">
-    <h3>{name}</h3>
-    <p>{desc}</p>
-    <div class="price">{price} دج</div>
-    <button class="add" onclick="addToCart('{name}',{price})">أضف إلى السلة</button>
-  </div>
-</div>''')
+<nav><div class="nav-inner">
+<button onclick="filterProducts('all')">الكل</button><button onclick="filterProducts('tools')">أدوات</button>
+<button onclick="filterProducts('electric')">كهرباء</button><button onclick="filterProducts('plumbing')">سباكة</button><button onclick="filterProducts('home')">منزلية</button>
+</div></nav>
 
-marker = '<div class="products" id="productList">'
-if marker not in html:
-    # Try common alternative containers.
-    m = re.search(r'<div[^>]+class=["\']products["\'][^>]*>', html)
-    marker = m.group(0) if m else None
+<section class="hero">
+<h1>كل ما تحتاجه في <span>BFTH BRICO</span></h1>
+<p>متجر متخصص في الخردوات والأدوات والمنتجات المنزلية. جودة، أسعار مناسبة وتوصيل إلى 69 ولاية.</p>
+<a href="#products">تصفح المنتجات</a>
+</section>
 
-if not marker:
-    raise RuntimeError("لم يتم العثور على قسم المنتجات في ملف HTML.")
+<section class="features">
+<div class="feature"><div class="icon">🚚</div><h3>توصيل 69 ولاية</h3><p>نوصل طلباتك إلى مختلف ولايات الجزائر</p></div>
+<div class="feature"><div class="icon">💰</div><h3>أسعار مناسبة</h3><p>أسعار تنافسية للجملة والتجزئة</p></div>
+<div class="feature"><div class="icon">✅</div><h3>منتجات مختارة</h3><p>منتجات عملية للاستخدام اليومي</p></div>
+<div class="feature"><div class="icon">📱</div><h3>طلب عبر واتساب</h3><p>اطلب بسهولة وبسرعة</p></div>
+</section>
 
-html = html.replace(marker, marker + "\n".join(cards), 1)
+<section class="section" id="products">
+<div class="section-title"><h2>🔥 المنتجات</h2></div>
+<div class="products" id="productList">
 
-out = Path("/mnt/data/BFTH_BRICO_store_updated_products.html")
-out.write_text(html, encoding="utf-8")
+<div class="product" data-category="tools" data-name="مغلق الباب الأوتوماتيكي"><div class="product-img">🔧<div class="badge">جديد</div></div>
+<div class="product-info"><h3>مغلق الباب الأوتوماتيكي</h3><p>مغلق عملي ومناسب للأبواب المنزلية والمكاتب.</p><div class="price">1100 دج</div><button class="add" onclick="addToCart('مغلق الباب الأوتوماتيكي',1100)">أضف إلى السلة</button></div></div>
 
-print("تمت إضافة 6 منتجات جديدة إلى ملف المتجر.")
-print("المنتجات والأسعار:")
-for _, name, price, _ in products:
-    print(f"- {name}: {price} دج")
-print("\nمنتج مصد الباب الأوتوماتيكي الأخير يحتاج السعر قبل إضافته.")
-print(f"الملف الجاهز: {out}")
+<div class="product" data-category="electric" data-name="مصباح مكتبي"><div class="product-img">💡</div>
+<div class="product-info"><h3>مصباح مكتبي</h3><p>تصميم أنيق ومناسب للمكتب والدراسة.</p><div class="price">1650 دج</div><button class="add" onclick="addToCart('مصباح مكتبي',1650)">أضف إلى السلة</button></div></div>
+
+<div class="product" data-category="tools" data-name="مفتاح تركيب الحنفيات"><div class="product-img">🔩</div>
+<div class="product-info"><h3>مفتاح تركيب الحنفيات</h3><p>أداة عملية لتركيب وفك الحنفيات.</p><div class="price">950 دج</div><button class="add" onclick="addToCart('مفتاح تركيب الحنفيات',950)">أضف إلى السلة</button></div></div>
+
+<div class="product" data-category="home" data-name="موقد كهربائي"><div class="product-img">🔥</div>
+<div class="product-info"><h3>موقد كهربائي</h3><p>موقد عملي للاستخدام المنزلي.</p><div class="price">1850 دج</div><button class="add" onclick="addToCart('موقد كهربائي',1850)">أضف إلى السلة</button></div></div>
+
+<div class="product" data-category="plumbing" data-name="أداة سباكة"><div class="product-img">🚿</div>
+<div class="product-info"><h3>أداة سباكة متعددة الاستخدام</h3><p>مناسبة لأعمال الصيانة المنزلية.</p><div class="price">1200 دج</div><button class="add" onclick="addToCart('أداة سباكة متعددة الاستخدام',1200)">أضف إلى السلة</button></div></div>
+
+<div class="product" data-category="tools" data-name="طقم مفكات"><div class="product-img">🪛</div>
+<div class="product-info"><h3>طقم مفكات</h3><p>طقم عملي لمختلف أعمال الصيانة.</p><div class="price">1500 دج</div><button class="add" onclick="addToCart('طقم مفكات',1500)">أضف إلى السلة</button></div></div>
+
+</div></section>
+
+<footer><div class="footer-inner">
+<div><h3>BFTH BRICO</h3><p>متجر الخردوات والأدوات والمنتجات المنزلية. منتجات عملية بأسعار مناسبة مع خدمة توصيل إلى 69 ولاية.</p></div>
+<div><h3>الأقسام</h3><ul><li>الأدوات</li><li>الكهرباء</li><li>السباكة</li><li>المنتجات المنزلية</li></ul></div>
+<div><h3>تواصل معنا</h3><p>📱 واتساب: 0774334689</p><p>🚚 توصيل إلى 69 ولاية</p></div>
+</div><div class="copyright">© 2026 BFTH BRICO - جميع الحقوق محفوظة</div></footer>
+
+<a class="whatsapp" href="https://wa.me/213774334689" target="_blank">☎</a>
+
+<div class="modal" id="cartModal"><div class="modal-box">
+<div class="modal-header"><h2>🛒 سلة المشتريات</h2><div class="close" onclick="closeCart()">×</div></div>
+<div id="cartItems"></div><h3 style="margin-top:20px">المجموع: <span id="total">0</span> دج</h3>
+<button class="checkout" onclick="sendOrder()">إرسال الطلب عبر واتساب</button>
+</div></div>
+
+<script>
+let cart=[];
+function addToCart(name,price){const e=cart.find(i=>i.name===name);e?e.qty++:cart.push({name,price,qty:1});updateCart();alert("تمت إضافة المنتج إلى السلة ✅")}
+function updateCart(){document.getElementById("cartCount").innerText=cart.reduce((s,i)=>s+i.qty,0);let html="",total=0;cart.forEach((i,n)=>{total+=i.price*i.qty;html+=`<div class="cart-item"><div><strong>${i.name}</strong><br>${i.price} دج</div><div class="qty"><button onclick="changeQty(${n},-1)">-</button><span>${i.qty}</span><button onclick="changeQty(${n},1)">+</button></div></div>`});if(!cart.length)html="<p>السلة فارغة.</p>";document.getElementById("cartItems").innerHTML=html;document.getElementById("total").innerText=total}
+function changeQty(i,v){cart[i].qty+=v;if(cart[i].qty<=0)cart.splice(i,1);updateCart()}
+function openCart(){updateCart();document.getElementById("cartModal").style.display="flex"}
+function closeCart(){document.getElementById("cartModal").style.display="none"}
+function sendOrder(){if(!cart.length){alert("السلة فارغة");return}let m="السلام عليكم، أريد طلب:%0A%0A",t=0;cart.forEach(i=>{m+=`• ${i.name} × ${i.qty} = ${i.price*i.qty} دج%0A`;t+=i.price*i.qty});m+=`%0A💰 المجموع: ${t} دج`;window.open("https://wa.me/213774334689?text="+m,"_blank")}
+function searchProducts(){const s=document.getElementById("searchInput").value.toLowerCase();document.querySelectorAll(".product").forEach(p=>p.style.display=p.dataset.name.toLowerCase().includes(s)?"":"none")}
+function filterProducts(c){document.querySelectorAll(".product").forEach(p=>p.style.display=c==="all"||p.dataset.category===c?"":"none")}
+updateCart();
+</script>
+</body>
+</html>'''
+
+html = html.replace("LOGO_BASE64", logo_b64)
+out = "/mnt/data/BFTH_BRICO_store_with_logo.html"
+Path(out).write_text(html, encoding="utf-8")
+print(f"تم إنشاء الملف: {out}")
